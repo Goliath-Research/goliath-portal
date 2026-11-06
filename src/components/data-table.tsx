@@ -1,30 +1,72 @@
-export function DataTable({ rows }: { rows: Record<string, unknown>[] }) {
-  if (rows.length === 0) {
+export type Column = { key: string; label: string };
+
+export function DataTable({
+  rows,
+  columns,
+  rowHref,
+  rowKey,
+  selectedKey,
+}: {
+  rows: Record<string, unknown>[];
+  columns?: Column[];
+  rowHref?: (row: Record<string, unknown>) => string;
+  rowKey?: (row: Record<string, unknown>, index: number) => string;
+  selectedKey?: string;
+}) {
+  const resolved = resolveColumns(rows, columns);
+  if (resolved.length === 0) {
     return <p className="empty">No rows.</p>;
   }
-  const columns = Object.keys(rows[0] ?? {}).filter((column) => column !== "content_hash");
   return (
     <div className="grid-wrap">
       <table>
         <thead>
           <tr>
-            {columns.map((column) => (
-              <th key={column}>{columnLabel(column)}</th>
+            {resolved.map((column) => (
+              <th key={column.key}>{column.label}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, index) => (
-            <tr key={index}>
-              {columns.map((column) => (
-                <td key={column}>{formatCell(row[column])}</td>
-              ))}
+          {rows.length === 0 ? (
+            <tr>
+              <td colSpan={resolved.length} className="empty">
+                No rows.
+              </td>
             </tr>
-          ))}
+          ) : (
+            rows.map((row, index) => {
+              const href = rowHref?.(row);
+              const key = rowKey ? rowKey(row, index) : String(row.id ?? row.name ?? index);
+              const selected = selectedKey != null && selectedKey !== "" && selectedKey === key;
+              return (
+                <tr key={key} className={selected ? "selected" : undefined}>
+                  {resolved.map((column, columnIndex) => (
+                    <td key={column.key}>
+                      {href && columnIndex === 0 ? <a href={href}>{formatCell(row[column.key])}</a> : formatCell(row[column.key])}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })
+          )}
         </tbody>
       </table>
     </div>
   );
+}
+
+function resolveColumns(rows: Record<string, unknown>[], columns?: Column[]): Column[] {
+  if (!columns) {
+    return Object.keys(rows[0] ?? {})
+      .filter((key) => key !== "content_hash")
+      .map((key) => ({ key, label: columnLabel(key) }));
+  }
+  const known = new Set(columns.map((column) => column.key));
+  const extra = Object.keys(rows[0] ?? {})
+    .filter((key) => !known.has(key) && key !== "content_hash" && key !== "document_json")
+    .map((key) => ({ key, label: columnLabel(key) }));
+  return [...columns, ...extra];
 }
 
 const COLUMN_LABELS: Record<string, string> = {

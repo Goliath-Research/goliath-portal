@@ -1,4 +1,4 @@
-import { DataTable } from "@/components/data-table";
+import { DataTable, type Column } from "@/components/data-table";
 import type { Row } from "@/server/screens";
 
 export function Workbench({
@@ -22,7 +22,17 @@ export function Workbench({
   );
 }
 
-export function Pane({ title, rows, error }: { title: string; rows: Row[]; error?: string }) {
+export function Pane({
+  title,
+  rows,
+  error,
+  columns,
+}: {
+  title: string;
+  rows: Row[];
+  error?: string;
+  columns?: Column[];
+}) {
   if (error) {
     return (
       <section className="alert">
@@ -34,7 +44,7 @@ export function Pane({ title, rows, error }: { title: string; rows: Row[]; error
   return (
     <section className="panel">
       <h2>{title}</h2>
-      <DataTable rows={rows} />
+      <DataTable rows={rows} columns={columns} />
     </section>
   );
 }
