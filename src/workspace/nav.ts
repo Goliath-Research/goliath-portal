@@ -41,6 +41,7 @@ export const NAV: NavNode[] = [
     children: [
       { id: "site", label: "Site", href: "/desk/site" },
       { id: "profiles", label: "Pipeline profiles", href: "/desk/profiles" },
+      { id: "programs", label: "Domain programs", href: "/desk/programs" },
       { id: "analytes", label: "Analytes", href: "/analytes" },
       { id: "catalog", label: "Action catalog", href: "/desk/catalog" },
       { id: "storage-admin", label: "Storage & credentials", href: "/desk/storage-admin" },
