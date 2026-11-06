@@ -49,7 +49,15 @@ export function studyDefaults(studyId: number) {
 }
 
 export function studyDocument(name: string, version: string) {
-  return grid("SELECT id, name, version, status, study_id FROM portal.sp_get_study($1, $2)", [name, version]);
+  return grid("SELECT * FROM portal.sp_get_study($1, $2)", [name, version]);
+}
+
+export function listStudyGroups(studyId: number) {
+  return grid("SELECT * FROM portal.sp_list_study_groups($1)", [studyId]);
+}
+
+export function listStudyGroupMembers(groupId: number) {
+  return grid("SELECT * FROM portal.sp_list_study_group_members($1)", [groupId]);
 }
 
 export function listStorageEndpoints() {
@@ -70,6 +78,10 @@ export function listWorkflowDefs() {
 
 export function listWorkflowVersions(name: string) {
   return grid("SELECT * FROM portal.sp_list_workflow_versions($1, $2)", [null, name]);
+}
+
+export function getWorkflowGraph(versionId: number) {
+  return grid("SELECT * FROM portal.sp_get_workflow_graph($1)", [versionId]);
 }
 
 export function listSites() {
@@ -100,8 +112,32 @@ export function listSearches(studyId: number | null) {
   return grid("SELECT * FROM portal.sp_list_hyperparam_searches($1, $2)", [null, studyId]);
 }
 
+export function getHyperparamSearch(searchId: number) {
+  return grid("SELECT * FROM portal.sp_get_hyperparam_search($1)", [searchId]);
+}
+
 export function listContracts() {
   return grid("SELECT * FROM portal.sp_list_contracts($1)", [true]);
+}
+
+export function listDomainPrograms() {
+  return grid("SELECT * FROM portal.sp_list_domain_programs($1)", [false]);
+}
+
+export function getSite(id: number) {
+  return grid("SELECT * FROM portal.sp_get_site($1, $2, $3)", [id, null, null]);
+}
+
+export function getNamed(fn: "sp_get_pipeline_profile" | "sp_get_reference_asset" | "sp_get_domain_program" | "sp_get_storage_endpoint", name: string, version: string) {
+  return grid(`SELECT * FROM portal.${fn}($1, $2)`, [name, version || null]);
+}
+
+export function documentText(result: Grid): { text: string; error?: string } {
+  if (result.error) return { text: "", error: result.error };
+  const row = result.rows[0];
+  if (!row) return { text: "" };
+  const value = row.document_json ?? row.location_json ?? row;
+  return { text: typeof value === "string" ? value : JSON.stringify(value, null, 2) };
 }
 
 export function chosenStudy(studies: Row[], selected: string | undefined): Row | null {
